@@ -3,7 +3,8 @@
 DOS tool that enables CD/DVD bus-master DMA on ALi M1543/M1543C (M5229) chipsets (Aladdin IV+, Aladdin V, Aladdin Pro II).
 It fixes the "General failure" error you get with UIDE/UDVD2 when you don't use `/UX`.
 
-*Deutsche Version weiter unten.*
+
+> **Testers wanted:** So far ALI5DMA has only been tested on one board (ASUS P5A, M5229 revision C1). Reports from other boards, especially with **M5229 revision C2h or newer** (M1543C-B0 and later), are explicitly welcome. Just open an issue with your ALIINFO output (plain DOS and, if possible, a Windows 9x DOS box), your board and drives, and whether CD/DVD access works with UIDE/UDVD2 without `/UX`.
 
 ## The problem
 
@@ -71,7 +72,7 @@ On revision C2h and newer, Linux doesn't touch this bit and keeps whatever the B
 
 According to the Linux `alim15x3` driver, revisions below C2h aren't supposed to support UltraDMA for ATAPI. On the board above it works anyway, and the Windows 98 driver uses it too. **Verify data integrity on your system** by copying a large file from CD and comparing it with `FC /B`. If you have problems, use UIDE with `/UX`.
 
-Reports from other boards are welcome. Please open an issue with your ALIINFO output.
+See *Testers wanted* above. Reports from other boards and revisions are very welcome.
 
 ## Building
 
@@ -81,24 +82,6 @@ nasm -f bin -o bin/ALIINFO.COM src/ALIINFO.ASM
 ```
 
 Requires a 386 or newer CPU (PCI configuration mechanism #1).
-
----
-
-## Deutsch
-
-**ALi5DMA** schaltet unter DOS den Bus-Master-DMA für CD/DVD-Laufwerke an ALi-M1543/M1543C-Chipsätzen (M5229) frei.
-
-**Problem:** Unter Windows 9x laufen die Laufwerke mit DMA. Unter DOS bricht UIDE bzw. UDVD2 ohne `/UX` jeden Zugriff mit „Allgemeiner Fehler“ ab.
-
-**Ursache:** Manche BIOS-Versionen (z. B. ASUS P5A) setzen Bit 0 im Register 53h des M5229 („CD-ROM DMA enable“) nicht. Der Windows-Treiber holt das nach, DOS-Treiber nicht.
-
-**Lösung:** `DEVICE=C:\DOS\ALI5DMA.EXE /Q` in die `CONFIG.SYS` eintragen, und zwar vor UIDE. Alternativ kann `ALI5DMA.EXE /Q` in der `AUTOEXEC.BAT` vor SHSUCDX/MSCDEX stehen. UIDE dann ohne `/UX` laden. Als Treiber bleiben nur 63 Byte resident.
-
-Die Option `/W` schaltet zusätzlich das DMA-Schreiben (Register 4Bh, Bit 7) ein. Davon wird abgeraten: Auf Revisionen unter C2h ist es laut Linux-Treiber defekt, und auch Windows 98 lässt es aus. Ein Fehler würde wahrscheinlich still eine Brenn-CD beschädigen. ALI5DMA fragt deshalb jedes Mal nach, auch beim Laden aus der `CONFIG.SYS`. Erst ein `Y` bestätigt die Änderung. Ab Revision C2h lässt Linux das Bit unverändert, also so, wie das BIOS es gesetzt hat. ALI5DMA setzt es bei keiner Revision automatisch.
-
-`ALIINFO.COM` liest die Register nur aus und ändert nichts. Es eignet sich zur Diagnose und zum Vergleich mit der DOS-Box unter Windows.
-
-Getestet auf einem ASUS P5A mit M5229 Rev. C1. Dort laufen zwei TEAC-Laufwerke und eine CF-Karte mit UltraDMA 2, und die kopierten Daten sind byteidentisch. Bitte die Datenintegrität auf dem eigenen System mit `FC /B` prüfen.
 
 ## License
 
