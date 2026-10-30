@@ -15,23 +15,33 @@ Bit 0 of register **53h** in the M5229 IDE controller's PCI config space is the 
 
 ## The fix
 
-`ALI5DMA.COM` finds the M5229 on the PCI bus and sets that bit. The change lasts until the next reset.
+`ALI5DMA.EXE` finds the M5229 on the PCI bus and sets that bit. The change lasts until the next reset. The same file works as a device driver and as a program.
 
-Put it at the top of `AUTOEXEC.BAT`, before SHSUCDX/MSCDEX:
+**As a device driver (recommended):** load it in `CONFIG.SYS` before UIDE/UDVD2.
 
 ```
-C:\DOS\ALI5DMA.COM /Q
-LH C:\DOS\SHSUCDX.COM /D:MSCD000
+DEVICE=C:\DOS\ALI5DMA.EXE /Q
+DEVICEHIGH=C:\DOS\UIDE.SYS /S20 /D:MSCD000
 ```
 
-UIDE itself can stay in `CONFIG.SYS` **without** `/UX`. It only issues PIO commands while loading, so setting the bit later in `AUTOEXEC.BAT` is fine.
+Only the 18-byte device header and two short stubs stay resident (63 bytes). The rest is discarded after init.
+
+**As a program:** run it in `AUTOEXEC.BAT`, before SHSUCDX/MSCDEX:
+
+```
+C:\DOS\ALI5DMA.EXE /Q
+```
+
+UIDE itself only issues PIO commands while loading, so this works too, even though UIDE was loaded first.
+
+In both cases, load UIDE/UDVD2 **without** `/UX`.
 
 | Option | Effect |
 |---|---|
 | (none) | Sets the bit and shows register 53h before and after |
 | `/Q` | No output unless an error occurs |
 
-Exit codes: `0` OK, `1` no M5229 found, `2` bit could not be set.
+Program exit codes (`ERRORLEVEL`): `0` OK, `1` no M5229 found, `2` bit could not be set.
 
 ## Diagnostics: ALIINFO
 
@@ -57,7 +67,7 @@ Reports from other boards are welcome. Please open an issue with your ALIINFO ou
 ## Building
 
 ```
-nasm -f bin -o bin/ALI5DMA.COM src/ALI5DMA.ASM
+nasm -f bin -o bin/ALI5DMA.EXE src/ALI5DMA.ASM
 nasm -f bin -o bin/ALIINFO.COM src/ALIINFO.ASM
 ```
 
@@ -73,7 +83,7 @@ Requires a 386 or newer CPU (PCI configuration mechanism #1).
 
 **Ursache:** Manche BIOS-Versionen (z. B. ASUS P5A) setzen Bit 0 im Register 53h des M5229 („CD-ROM DMA enable“) nicht. Der Windows-Treiber holt das nach, DOS-Treiber nicht.
 
-**Lösung:** `ALI5DMA.COM /Q` als erste Zeile in die `AUTOEXEC.BAT` schreiben, auf jeden Fall vor SHSUCDX/MSCDEX. UIDE dann ohne `/UX` laden.
+**Lösung:** `DEVICE=C:\DOS\ALI5DMA.EXE /Q` in die `CONFIG.SYS` eintragen, und zwar vor UIDE. Alternativ kann `ALI5DMA.EXE /Q` in der `AUTOEXEC.BAT` vor SHSUCDX/MSCDEX stehen. UIDE dann ohne `/UX` laden. Als Treiber bleiben nur 63 Byte resident.
 
 `ALIINFO.COM` liest die Register nur aus und ändert nichts. Es eignet sich zur Diagnose und zum Vergleich mit der DOS-Box unter Windows.
 
