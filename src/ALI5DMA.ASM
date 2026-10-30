@@ -12,6 +12,11 @@
 ; As a driver it stays resident with a few bytes only (header + stubs).
 ;
 ; /Q = quiet, no output unless an error occurs
+; /W = additionally enable CD-ROM DMA *write* (register 4Bh bit 7).
+;      NOT recommended: the Linux alim15x3 driver clears this bit on M5229
+;      revisions below C2h because ATAPI DMA writes are broken there, and
+;      the Windows 9x driver leaves it off too. Asks for confirmation (Y)
+;      every time, also when loaded from CONFIG.SYS.
 ;
 ; Requires a 386 or newer CPU (PCI configuration mechanism #1).
 ; Build:  nasm -f bin -o ALI5DMA.EXE ALI5DMA.ASM
@@ -135,8 +140,12 @@ parse_q:
         lodsb
         and al, 0DFh
         cmp al, 'Q'
-        jne .l
+        jne .notq
         mov byte [cs:quiet], 1
+        jmp .l
+.notq:  cmp al, 'W'
+        jne .l
+        mov byte [cs:wflag], 1
         jmp .l
 .e:     ret
 
@@ -203,7 +212,78 @@ do_work:
         call hex8
         mov dx, msg_crlf
         call say
-.ret:   xor al, al
+.ret:   cmp byte [wflag], 0
+        je .r0
+        call do_write
+.r0:    xor al, al
+        ret
+
+; ------------------------------------------------------------------
+; do_write: optional CD-ROM DMA write enable (4Bh bit 7), needs "Y"
+; ------------------------------------------------------------------
+do_write:
+        mov byte [quiet], 0             ; always show this part
+        mov cl, 4Bh
+        call rdb
+        test al, 80h
+        jz .ask
+        mov dx, msg_w_already
+        call say
+        ret
+.ask:
+        mov dx, msg_w_warn
+        call say
+        mov cl, 08h
+        call rdb
+        mov dx, msg_w_rev
+        call say
+        call hex8
+        mov dx, msg_crlf
+        call say
+        cmp al, 0C2h
+        jae .prompt
+        mov dx, msg_w_broken
+        call say
+.prompt:
+        mov dx, msg_w_prompt
+        call say
+        xor ah, ah
+        int 16h                         ; works from CONFIG.SYS too
+        mov dl, al
+        cmp dl, ' '
+        jb .noecho
+        call putc_dl
+.noecho:
+        mov dx, msg_crlf
+        call say
+        and al, 0DFh
+        cmp al, 'Y'
+        je .set
+        mov dx, msg_w_skip
+        call say
+        ret
+.set:
+        mov cl, 4Bh
+        call rdb
+        or al, 80h
+        call wrb
+        mov cl, 4Bh
+        call rdb
+        test al, 80h
+        jz .fail
+        mov dx, msg_w_done
+        call say
+        ret
+.fail:
+        mov dx, msg_w_fail
+        call say
+        ret
+
+putc_dl:
+        push ax
+        mov ah, 02h
+        int 21h
+        pop ax
         ret
 
 ; write config address for offset CL, return DX = data port
@@ -266,7 +346,7 @@ nib:    and al, 0Fh
         call putc
         ret
 
-msg_title   db 'ALI5DMA 1.1 - ALi M5229 CD/DVD DMA enabler',13,10,'$'
+msg_title   db 'ALI5DMA 1.2 - ALi M5229 CD/DVD DMA enabler',13,10,'$'
 msg_nf      db 'ALI5DMA: no ALi M5229 IDE controller found.',13,10,'$'
 msg_fail    db 'ALI5DMA: could not set register 53h bit 0!',13,10,'$'
 msg_already db 'CD/DVD DMA was already enabled.',13,10,'$'
@@ -274,11 +354,22 @@ msg_done    db 'CD/DVD DMA enabled.',13,10,'$'
 msg_reg     db 'M5229 register 53h: $'
 msg_arrow   db ' -> $'
 msg_crlf    db 13,10,'$'
+msg_w_warn  db 13,10,'WARNING: /W enables CD-ROM DMA WRITE (register 4Bh bit 7).',13,10
+            db 'This affects data sent TO the drive (e.g. CD burning) and may',13,10
+            db 'silently corrupt written discs. Windows 9x leaves it off.',13,10,'$'
+msg_w_rev   db 'M5229 revision: $'
+msg_w_broken db 'Revisions below C2h have broken ATAPI DMA writes (Linux clears this bit).',13,10,'$'
+msg_w_prompt db 'Enable CD-ROM DMA write anyway? Press Y to confirm, any other key aborts: $'
+msg_w_skip  db 'CD-ROM DMA write NOT enabled.',13,10,'$'
+msg_w_done  db 'CD-ROM DMA write enabled.',13,10,'$'
+msg_w_fail  db 'ALI5DMA: could not set register 4Bh bit 7!',13,10,'$'
+msg_w_already db 'CD-ROM DMA write was already enabled.',13,10,'$'
 
 addr   dd 0
 devreq dd 0
 old53  db 0
 quiet  db 0
+wflag  db 0
 
 img_end:
 img_len equ img_end - img_start

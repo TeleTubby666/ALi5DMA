@@ -40,8 +40,15 @@ In both cases, load UIDE/UDVD2 **without** `/UX`.
 |---|---|
 | (none) | Sets the bit and shows register 53h before and after |
 | `/Q` | No output unless an error occurs |
+| `/W` | Additionally enables CD-ROM DMA **write** (register 4Bh bit 7). Asks for confirmation every time. Not recommended, see below |
 
 Program exit codes (`ERRORLEVEL`): `0` OK, `1` no M5229 found, `2` bit could not be set.
+
+### Why CD-ROM DMA write is off by default
+
+Register 4Bh bit 7 controls DMA for data sent *to* an ATAPI drive, which in practice means CD burning. The Linux `alim15x3` driver deliberately clears this bit on M5229 revisions 20h, C0h and C1h, because ATAPI DMA writes are broken there. The Windows 98 driver leaves it off as well, so it burns via PIO. A failure would most likely mean a silently corrupted disc, not an error message. Reading isn't affected.
+
+There's also little to gain under DOS: UIDE/UDVD2 only read from CD/DVD, and DOS burning software uses its own ASPI driver. If you want to experiment anyway, `/W` enables the bit after you confirm it with `Y`. The prompt also appears when the driver is loaded from `CONFIG.SYS`.
 
 ## Diagnostics: ALIINFO
 
@@ -84,6 +91,8 @@ Requires a 386 or newer CPU (PCI configuration mechanism #1).
 **Ursache:** Manche BIOS-Versionen (z. B. ASUS P5A) setzen Bit 0 im Register 53h des M5229 („CD-ROM DMA enable“) nicht. Der Windows-Treiber holt das nach, DOS-Treiber nicht.
 
 **Lösung:** `DEVICE=C:\DOS\ALI5DMA.EXE /Q` in die `CONFIG.SYS` eintragen, und zwar vor UIDE. Alternativ kann `ALI5DMA.EXE /Q` in der `AUTOEXEC.BAT` vor SHSUCDX/MSCDEX stehen. UIDE dann ohne `/UX` laden. Als Treiber bleiben nur 63 Byte resident.
+
+Die Option `/W` schaltet zusätzlich das DMA-Schreiben (Register 4Bh, Bit 7) ein. Davon wird abgeraten: Auf Revisionen unter C2h ist es laut Linux-Treiber defekt, und auch Windows 98 lässt es aus. Ein Fehler würde wahrscheinlich still eine Brenn-CD beschädigen. ALI5DMA fragt deshalb jedes Mal nach, auch beim Laden aus der `CONFIG.SYS`. Erst ein `Y` bestätigt die Änderung.
 
 `ALIINFO.COM` liest die Register nur aus und ändert nichts. Es eignet sich zur Diagnose und zum Vergleich mit der DOS-Box unter Windows.
 
