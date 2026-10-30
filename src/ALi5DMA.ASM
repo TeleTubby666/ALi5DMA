@@ -1,4 +1,4 @@
-; ALI5DMA.EXE - enables CD/DVD bus-master DMA on ALi M5229 IDE controllers
+; ALi5DMA.EXE - enables CD/DVD bus-master DMA on ALi M5229 IDE controllers
 ; (ALi M1543/M1543C southbridge: Aladdin IV+, Aladdin V, Aladdin Pro II)
 ;
 ; Some BIOSes (e.g. ASUS P5A) leave bit 0 of M5229 config register 53h
@@ -7,8 +7,8 @@
 ; access in DMA mode. This tool sets the bit. The setting lasts until reset.
 ;
 ; The file works both as a program and as a device driver:
-;   CONFIG.SYS:    DEVICE=C:\DOS\ALI5DMA.EXE [/Q]   (before UIDE/UDVD2)
-;   command line:  ALI5DMA [/Q]
+;   CONFIG.SYS:    DEVICE=C:\DOS\ALi5DMA.EXE [/Q]   (before UIDE/UDVD2)
+;   command line:  ALi5DMA [/Q]
 ; As a driver it stays resident with a few bytes only (header + stubs).
 ;
 ; /Q = quiet, no output unless an error occurs
@@ -19,7 +19,7 @@
 ;      every time, also when loaded from CONFIG.SYS.
 ;
 ; Requires a 386 or newer CPU (PCI configuration mechanism #1).
-; Build:  nasm -f bin -o ALI5DMA.EXE ALI5DMA.ASM
+; Build:  nasm -f bin -o ALi5DMA.EXE ALi5DMA.ASM
 ; License: MIT (see LICENSE)
 
         cpu 386
@@ -346,9 +346,9 @@ nib:    and al, 0Fh
         call putc
         ret
 
-msg_title   db 'ALI5DMA 1.2 - ALi M5229 CD/DVD DMA enabler',13,10,'$'
-msg_nf      db 'ALI5DMA: no ALi M5229 IDE controller found.',13,10,'$'
-msg_fail    db 'ALI5DMA: could not set register 53h bit 0!',13,10,'$'
+msg_title   db 'ALi5DMA 1.2 - ALi M5229 CD/DVD DMA enabler',13,10,'$'
+msg_nf      db 'ALi5DMA: no ALi M5229 IDE controller found.',13,10,'$'
+msg_fail    db 'ALi5DMA: could not set register 53h bit 0!',13,10,'$'
 msg_already db 'CD/DVD DMA was already enabled.',13,10,'$'
 msg_done    db 'CD/DVD DMA enabled.',13,10,'$'
 msg_reg     db 'M5229 register 53h: $'
@@ -362,7 +362,7 @@ msg_w_broken db 'Revisions below C2h have broken ATAPI DMA writes (Linux clears 
 msg_w_prompt db 'Enable CD-ROM DMA write anyway? Press Y to confirm, any other key aborts: $'
 msg_w_skip  db 'CD-ROM DMA write NOT enabled.',13,10,'$'
 msg_w_done  db 'CD-ROM DMA write enabled.',13,10,'$'
-msg_w_fail  db 'ALI5DMA: could not set register 4Bh bit 7!',13,10,'$'
+msg_w_fail  db 'ALi5DMA: could not set register 4Bh bit 7!',13,10,'$'
 msg_w_already db 'CD-ROM DMA write was already enabled.',13,10,'$'
 
 addr   dd 0

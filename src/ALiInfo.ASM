@@ -1,6 +1,6 @@
-; ALIINFO.COM - dumps the IDE registers of the ALi M5229 (M1543/M1543C)
+; ALiInfo.COM - dumps the IDE registers of the ALi M5229 (M1543/M1543C)
 ; Read-only, changes nothing. Requires 386+ (PCI configuration mechanism #1).
-; Build: nasm -f bin -o ALIINFO.COM ALIINFO.ASM
+; Build: nasm -f bin -o ALiInfo.COM ALiInfo.ASM
 ; License: MIT (see LICENSE)
 
         cpu 386
@@ -252,7 +252,7 @@ nib:    and al, 0Fh
         ret
 
 ; ---- data ----
-msg_title db 'ALIINFO 1.0 - ALi M5229 IDE registers (read-only)',13,10,13,10,'$'
+msg_title db 'ALiInfo 1.0 - ALi M5229 IDE registers (read-only)',13,10,13,10,'$'
 msg_found db 'M5229 found: $'
 msg_bus   db 'Bus $'
 msg_dev   db ', device $'
