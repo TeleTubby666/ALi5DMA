@@ -50,6 +50,8 @@ Register 4Bh bit 7 controls DMA for data sent *to* an ATAPI drive, which in prac
 
 There's also little to gain under DOS: UIDE/UDVD2 only read from CD/DVD, and DOS burning software uses its own ASPI driver. If you want to experiment anyway, `/W` enables the bit after you confirm it with `Y`. The prompt also appears when the driver is loaded from `CONFIG.SYS`.
 
+On revision C2h and newer, Linux doesn't touch this bit and keeps whatever the BIOS set. ALI5DMA doesn't set it automatically on any revision either, and `/W` asks for confirmation regardless of revision. So far it has only been tested on revision C1. If you have a board with C2h or newer, please report your ALIINFO output.
+
 ## Diagnostics: ALIINFO
 
 `ALIINFO.COM` is read-only. It shows the M5229 revision, registers 40h–5Fh, the bus-master status and the relevant bits. Run it once in a Windows 9x DOS box and once in plain DOS to compare what the Windows driver changes:
@@ -92,7 +94,7 @@ Requires a 386 or newer CPU (PCI configuration mechanism #1).
 
 **Lösung:** `DEVICE=C:\DOS\ALI5DMA.EXE /Q` in die `CONFIG.SYS` eintragen, und zwar vor UIDE. Alternativ kann `ALI5DMA.EXE /Q` in der `AUTOEXEC.BAT` vor SHSUCDX/MSCDEX stehen. UIDE dann ohne `/UX` laden. Als Treiber bleiben nur 63 Byte resident.
 
-Die Option `/W` schaltet zusätzlich das DMA-Schreiben (Register 4Bh, Bit 7) ein. Davon wird abgeraten: Auf Revisionen unter C2h ist es laut Linux-Treiber defekt, und auch Windows 98 lässt es aus. Ein Fehler würde wahrscheinlich still eine Brenn-CD beschädigen. ALI5DMA fragt deshalb jedes Mal nach, auch beim Laden aus der `CONFIG.SYS`. Erst ein `Y` bestätigt die Änderung.
+Die Option `/W` schaltet zusätzlich das DMA-Schreiben (Register 4Bh, Bit 7) ein. Davon wird abgeraten: Auf Revisionen unter C2h ist es laut Linux-Treiber defekt, und auch Windows 98 lässt es aus. Ein Fehler würde wahrscheinlich still eine Brenn-CD beschädigen. ALI5DMA fragt deshalb jedes Mal nach, auch beim Laden aus der `CONFIG.SYS`. Erst ein `Y` bestätigt die Änderung. Ab Revision C2h lässt Linux das Bit unverändert, also so, wie das BIOS es gesetzt hat. ALI5DMA setzt es bei keiner Revision automatisch.
 
 `ALIINFO.COM` liest die Register nur aus und ändert nichts. Es eignet sich zur Diagnose und zum Vergleich mit der DOS-Box unter Windows.
 
